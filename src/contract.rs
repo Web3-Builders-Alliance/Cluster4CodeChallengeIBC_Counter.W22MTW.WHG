@@ -48,6 +48,8 @@ pub fn execute(
 pub mod execute {
     use cosmwasm_std::IbcMsg;
 
+    use crate::msg::PacketMsg;
+
     use super::*;
 
     pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
@@ -55,7 +57,14 @@ pub mod execute {
             state.count += 1;
             Ok(state)
         })?;
-
+        let state = STATE.load(deps.storage)?;
+        let channel_id = state.endpoint;
+        
+        let channel_id = match  state.endpoint {
+            Some(entrypoint) =>unimplemented!(),
+            None => Err(ContractError::Unauthorized {})
+        };
+        let msg = PacketMsg::Increment {  };
         IbcMsg::SendPacket { channel_id: (), data: (), timeout: env.block.time.plus_seconds(1000u64).into() }
 
         Ok(Response::new().add_attribute("action", "increment"))
