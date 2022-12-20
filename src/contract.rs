@@ -35,12 +35,12 @@ pub fn instantiate(
 #[cfg_attr(not(feature = "library"), entry_point)]
 pub fn execute(
     deps: DepsMut,
-    _env: Env,
+    env: Env,
     info: MessageInfo,
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Increment {} => execute::increment(deps),
+        ExecuteMsg::Increment {} => execute::increment(deps, env),
         ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
     }
 }
@@ -52,20 +52,20 @@ pub mod execute {
 
     use super::*;
 
-    pub fn increment(deps: DepsMut) -> Result<Response, ContractError> {
+    pub fn increment(deps: DepsMut, env:Env) -> Result<Response, ContractError> {
         STATE.update(deps.storage, |mut state| -> Result<_, ContractError> {
             state.count += 1;
             Ok(state)
         })?;
         let state = STATE.load(deps.storage)?;
-        let channel_id = state.endpoint;
+    
         
         let channel_id = match  state.endpoint {
-            Some(entrypoint) =>unimplemented!(),
+            Some(entrypoint) => unimplemented!(),
             None => Err(ContractError::Unauthorized {})
         };
         let msg = PacketMsg::Increment {  };
-        IbcMsg::SendPacket { channel_id: (), data: (), timeout: env.block.time.plus_seconds(1000u64).into() }
+        IbcMsg::SendPacket { channel_id: (), data: (), timeout: env.block.time.plus_seconds(1000u64).into() };
 
         Ok(Response::new().add_attribute("action", "increment"))
     }

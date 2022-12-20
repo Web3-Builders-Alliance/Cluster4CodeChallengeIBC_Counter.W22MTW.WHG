@@ -2,7 +2,7 @@ use cosmwasm_std::{
     entry_point, from_slice, to_binary, Binary, Deps, DepsMut, Empty, Env, Event,
     Ibc3ChannelOpenResponse, IbcBasicResponse, IbcChannelCloseMsg, IbcChannelConnectMsg,
     IbcChannelOpenMsg, IbcChannelOpenResponse, IbcPacketAckMsg, IbcPacketReceiveMsg,
-    IbcPacketTimeoutMsg, IbcReceiveResponse, QueryRequest, StdResult, SystemResult, WasmMsg, Uint128, Addr,
+    IbcPacketTimeoutMsg, IbcReceiveResponse, QueryRequest, StdResult, SystemResult, WasmMsg, Uint128, Addr, MessageInfo,
 };
 
 use crate::ibc_helpers::{StdAck, try_get_ack_error, validate_order_and_version};
@@ -11,6 +11,7 @@ use crate::error::ContractError;
 use crate::msg::PacketMsg;
 use crate::state::STATE;
 //use crate::state::PENDING;
+use crate::contract;
 
 pub const IBC_VERSION: &str = "counter-1";
 
@@ -74,23 +75,27 @@ pub fn ibc_channel_close(
 pub fn ibc_packet_receive(
     deps: DepsMut,
     env: Env,
+    info:MessageInfo,
     msg: IbcPacketReceiveMsg,
 ) -> Result<IbcReceiveResponse, ContractError> {
     let packet_msg: StdResult<PacketMsg>  = from_slice(&msg.packet.data).unwrap();
+   
 
     match packet_msg {
         PacketMsg::Increment { } => increment(deps, env),
-        PacketMsg::Reset { count } => reset(deps, env, count),
+        PacketMsg::Reset { count } => reset(deps, env, count, info),
     }
 }
 
-pub fn increment(deps:DepsMut, _env:Env) -> Result<IbcReceiveResponse, ContractError> {
+pub fn increment(deps:DepsMut, env:Env) -> Result<IbcReceiveResponse, ContractError> {
+    contract::execute::increment(deps, env)?;
     Ok(IbcReceiveResponse::new()
         .add_attribute("method", "ibc_packet_receive")
         .set_ack(StdAck::success(&"0")))
 }
 
-pub fn reset(deps:DepsMut, env:Env, count:i32) -> Result<IbcReceiveResponse, ContractError> {
+pub fn reset(deps:DepsMut, env:Env, count:i32, info:MessageInfo) -> Result<IbcReceiveResponse, ContractError> {
+    contract::execute::reset(deps, info, count)?;
     Ok(IbcReceiveResponse::new()
         .add_attribute("method", "ibc_packet_receive")
         .set_ack(StdAck::success(&"0")))
