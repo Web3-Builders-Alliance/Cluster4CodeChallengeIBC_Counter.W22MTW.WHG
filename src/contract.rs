@@ -59,13 +59,15 @@ pub mod execute {
         })?;
         let state = STATE.load(deps.storage)?;
     
-        
-        let channel_id = match  state.endpoint {
-            Some(entrypoint) => unimplemented!(),
-            None => Err(ContractError::Unauthorized {})
-        };
+        let channel_id = STATE.load(deps.storage)?;
+        // let channel_id = match  state.endpoint {
+        //     Some(entrypoint) => state.endpoint.unwrap().channel_id,
+        //     None => return Err(ContractError::Unauthorized {})
+        // };
         let msg = PacketMsg::Increment {  };
-        IbcMsg::SendPacket { channel_id: (), data: (), timeout: env.block.time.plus_seconds(1000u64).into() };
+
+        //check for the channel_id endpoint isn't none
+        IbcMsg::SendPacket { channel_id:"".to_string(), data: to_binary(&msg)?, timeout: env.block.time.plus_seconds(1000u64).into() };
 
         Ok(Response::new().add_attribute("action", "increment"))
     }

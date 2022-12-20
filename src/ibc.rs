@@ -78,10 +78,10 @@ pub fn ibc_packet_receive(
     info:MessageInfo,
     msg: IbcPacketReceiveMsg,
 ) -> Result<IbcReceiveResponse, ContractError> {
-    let packet_msg: StdResult<PacketMsg>  = from_slice(&msg.packet.data).unwrap();
+    let packet_msg: StdResult<PacketMsg>  = from_slice(&msg.packet.data);
    
 
-    match packet_msg {
+    match packet_msg.unwrap() {
         PacketMsg::Increment { } => increment(deps, env),
         PacketMsg::Reset { count } => reset(deps, env, count, info),
     }
